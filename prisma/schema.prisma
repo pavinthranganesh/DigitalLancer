@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Book {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  author      String
+  description String?
+  price_sen   Int
+  weight_g    Int
+  stock       Int      @default(0)
+  sku         String?
+  cover_url   String?
+  createdAt   DateTime @default(now())
+}
+
+model Order {
+  id             Int         @id @default(autoincrement())
+  email          String
+  total_sen      Int
+  currency       String      @default("MYR")
+  shipping_addr  Json
+  shipping_cost  Int
+  tax_sen        Int
+  status         String      @default("pending")
+  stripe_session String?
+  createdAt      DateTime    @default(now())
+  items          OrderItem[]
+  payments       Payment[]
+}
+
+model OrderItem {
+  id        Int    @id @default(autoincrement())
+  order     Order  @relation(fields: [orderId], references: [id])
+  orderId   Int
+  book      Book   @relation(fields: [bookId], references: [id])
+  bookId    Int
+  quantity  Int
+  unit_sen  Int
+}
+
+model Payment {
+  id                 Int      @id @default(autoincrement())
+  order              Order    @relation(fields: [orderId], references: [id])
+  orderId            Int
+  provider           String
+  provider_payment_id String?
+  status             String
+  amount_sen         Int
+  createdAt          DateTime @default(now())
+}
+
+model Shipment {
+  id            Int     @id @default(autoincrement())
+  order         Order   @relation(fields: [orderId], references: [id])
+  orderId       Int
+  carrier       String?
+  tracking_no   String?
+  cost_sen      Int
+  status        String  @default("pending")
+}
